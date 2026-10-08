@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#f7f3e8">
+<meta name="description" content="Lelelilo 2D: a pillow in a pencil flip book. Run, jump, puff, glide, dash and flop across a paper pad.">
+<meta name="author" content="lelelilo.com">
+<title>Lelelilo 2D</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+  :root { --paper: #f7f3e8; --graphite: #33333b; --faint: #6b6864; --red: #d8605a; --blue: #548fe0; }
+  html, body { margin: 0; height: 100%; background: var(--paper); color: var(--graphite); overflow: hidden; overscroll-behavior: none; }
+  body { font: 500 16px ui-rounded, 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  canvas#lelelilo { position: fixed; inset: 0; width: 100vw; height: 100dvh; display: block; touch-action: none; outline: none; }
+  .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; box-sizing: border-box;
+    padding: max(24px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    background: var(--paper); text-align: center; transition: opacity .5s ease; z-index: 2; }
+  .screen.gone { opacity: 0; pointer-events: none; visibility: hidden; transition: opacity .5s ease, visibility 0s .5s; }
+  .screen.hidden { display: none; }
+  .title { width: min(132px, 34vw); height: auto; }
+  .rule path, .rule line { stroke: var(--graphite); stroke-linecap: round; stroke-linejoin: round; }
+  .rule .drawn, .rule line { fill: none; }
+  h1 { margin: 0; font-size: clamp(22px, 5vw, 30px); font-weight: 700; letter-spacing: .02em; }
+  p { margin: 0; max-width: 32em; line-height: 1.5; color: var(--faint); user-select: text; -webkit-user-select: text; }
+  /* Loading: a line ruled across the page, a pencil drawing it */
+  .rule { width: min(300px, 70vw); height: 34px; overflow: visible; }
+  .rule .guide { stroke: var(--blue); stroke-width: 1; stroke-dasharray: 2 6; opacity: .6; }
+  .rule .drawn { stroke-width: 2.4; }
+  .rule .pencil { transition: transform .25s ease; }
+  .status { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+  .browsers { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 30em; }
+  .browsers a { color: var(--graphite); text-decoration: none; padding: 12px 16px; border-radius: 4px; border: 1.5px solid var(--graphite); font-weight: 700; }
+  .err { font: 500 13px ui-monospace, monospace; color: var(--red); white-space: pre-wrap; max-width: min(90vw, 900px); max-height: 40vh; overflow: auto; text-align: left; padding: 12px 14px; border: 1.5px dashed var(--red); user-select: text; -webkit-user-select: text; }
+  .help { max-width: 32em; text-align: left; padding: 12px 16px; border: 1.5px dashed var(--faint); font-size: 14px; line-height: 1.5; }
+  .help.hidden { display: none; }
+  .help ol { margin: 6px 0 0; padding-left: 20px; }
+  code { font: 600 13px ui-monospace, monospace; }
+  /* The studio's page, at the foot of the loader's screens */
+  .studio { position: absolute; bottom: max(14px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); padding: 14px 16px;
+    font-size: 13px; font-weight: 700; letter-spacing: .08em; color: var(--graphite); text-decoration: none; }
+  .studio span { color: var(--red); }
+  .studio:hover { text-decoration: underline; }
+  @media (prefers-reduced-motion: reduce) { .screen, .screen.gone, .rule .pencil { transition: none; } }
+</style>
+</head>
+<body>
+<!-- The Lelelilo-Studios intro, first, over the download: any press after it has had its moment skips it, and
+     nothing pressed during it reaches the game -->
+<script src="../../lelelilo-intro/lelelilo-intro.js"></script>
+<script>
+  (function () {
+    // Browsers start sound only after a tap or a key: the game's audio context (window.__lelelilo_audio) is
+    // resumed on the first one. The intro keeps presses to itself, so it passes them on here.
+    window.__lelelilo_unlock = () => { const a = window.__lelelilo_audio; if (a && a.state !== 'running' && !document.hidden) a.resume().catch(() => {}); };
+    // The game says when its first frame is up (or that it can't start): the intro then makes way
+    let ready;
+    const gameReady = new Promise(r => { ready = r; });
+    window.__lelelilo_game_ready = () => ready();
+    // (a capture or a check from outside draws the game as it is, with no intro)
+    if (/[?&](capture|check)\b/.test(location.search) || !window.LeleliloIntro) { window.__lelelilo_intro_done = Promise.resolve(); return; }
+    // The game waits, silent, until the intro is over
+    window.__lelelilo_held = true;
+    // Its sound follows the game's: off when the game is started silent (`?mute`)
+    const sound = !/[?&]mute\b/.test(location.search);
+    window.__lelelilo_intro_done = LeleliloIntro.play({ base: '../../lelelilo-intro/', until: gameReady, sound, onGesture: window.__lelelilo_unlock });
+    window.__lelelilo_intro_done.then(() => { window.__lelelilo_held = false; });
+  })();
+</script>
+<canvas id="lelelilo" tabindex="0" aria-label="Lelelilo 2D"></canvas>
+
+<div class="screen" id="loading" role="status" aria-live="polite">
+  <img class="title" src="favicon.svg" alt="">
+  <h1>Lelelilo 2D</h1>
+  <svg class="rule" viewBox="0 0 300 34" aria-hidden="true">
+    <line class="guide" x1="4" y1="26" x2="296" y2="26"/>
+    <path class="drawn" id="drawn" d="M4,26 H296" style="clip-path: inset(-6px 100% -6px 0)"/>
+    <g class="pencil" id="pencil">
+      <path d="M0,26 L5,16 L11,19 Z" fill="#d1a05c" stroke-width="1"/>
+      <path d="M5,16 L21,-12 L27,-9 L11,19 Z" fill="#fcdb4d" stroke-width="1"/>
+      <path d="M21,-12 L23.5,-16.5 L29.5,-13.5 L27,-9 Z" fill="#f285a0" stroke-width="1"/>
+      <path d="M0,26 L2,22.2 L4.2,23.4 Z" fill="#33333b" stroke-width="1"/>
+    </g>
+  </svg>
+  <div class="status" id="status">Sharpening the pencil…</div>
+  <a class="studio" href="https://lelelilo.com/?ref=lelelilo-2d" target="_blank" rel="noopener">lelelilo<span>.com</span></a>
+</div>
+
+<div class="screen hidden" id="unsupported">
+  <h1>This browser can't open the flip book</h1>
+  <p>Lelelilo 2D needs <b>WebGPU</b>, which this browser doesn't offer yet. It works in these:</p>
+  <div class="browsers">
+    <a href="https://www.google.com/chrome/" rel="noopener">Chrome · desktop &amp; Android</a>
+    <a href="https://www.microsoft.com/edge" rel="noopener">Edge</a>
+    <a href="https://www.apple.com/safari/" rel="noopener">Safari 26+ · Mac, iPhone, iPad</a>
+  </div>
+  <div class="help hidden" id="linux-help"></div>
+  <p id="why" style="font-size:13px"></p>
+  <a class="studio" href="https://lelelilo.com/?ref=lelelilo-2d" target="_blank" rel="noopener">lelelilo<span>.com</span></a>
+</div>
+
+<div class="screen hidden" id="failed">
+  <h1>The pencil snapped</h1>
+  <p>Something went wrong while starting the game. Starting it again usually helps.</p>
+  <div class="browsers"><a href="." id="again">Try again</a></div>
+  <div class="err" id="errtext"></div>
+  <a class="studio" href="https://lelelilo.com/?ref=lelelilo-2d" target="_blank" rel="noopener">lelelilo<span>.com</span></a>
+</div>
+
+<script type="module">
+  const BUILD = '12b48aa4';
+  window.__lelelilo_build = BUILD;
+  // Sound starts with the first tap or key, and stops while the page is hidden (another tab, a phone's home screen)
+  const unlockAudio = window.__lelelilo_unlock;
+  for (const ev of ['pointerdown', 'keydown', 'touchend']) addEventListener(ev, unlockAudio, { capture: true });
+  // (presses during the studio intro are its own: once it is over, the game's sound starts if the page was pressed)
+  window.__lelelilo_intro_done.then(() => { if (navigator.userActivation?.hasBeenActive) unlockAudio(); });
+  document.addEventListener('visibilitychange', () => {
+    const a = window.__lelelilo_audio; if (!a) return;
+    if (document.hidden) a.suspend().catch(() => {}); else if (navigator.userActivation?.hasBeenActive) a.resume().catch(() => {});
+  });
+  const $ = id => document.getElementById(id);
+  const show = id => { for (const s of ['loading', 'unsupported', 'failed']) $(s).classList.toggle('hidden', s !== id); };
+  const setProgress = k => {
+    k = Math.max(0, Math.min(1, k));
+    $('drawn').style.clipPath = `inset(-6px ${(1 - k) * 100}% -6px 0)`;
+    $('pencil').style.transform = `translateX(${4 + k * 292}px)`;
+  };
+  setProgress(0);
+  const fail = e => { console.error(e); $('errtext').textContent = String(e && e.message || e); show('failed'); window.__lelelilo_game_ready(); };
+  $('again').addEventListener('click', e => { e.preventDefault(); location.reload(); });
+  const LINUX = /Linux/.test(navigator.userAgent) && !/Android/.test(navigator.userAgent);
+  // On Linux, browsers keep WebGPU switched off for now: say how to switch it on
+  const linuxHelp = () => `<b>On Linux</b>, WebGPU is still switched off by default. In Chrome, Chromium, Brave or Edge:
+    <ol><li>Open <code>chrome://flags</code> and set <b>Unsafe WebGPU Support</b> to Enabled,</li>
+    <li><b>Vulkan</b> to Enabled,</li><li><b>Preferred Ozone platform</b> to X11,</li><li>then relaunch the browser.</li></ol>`;
+
+  async function hasWebGPU() {
+    if (!navigator.gpu) return 'This browser has no WebGPU.';
+    try { const a = await navigator.gpu.requestAdapter(); return a ? null : 'WebGPU is present but found no usable graphics adapter.'; }
+    catch (e) { return 'WebGPU could not start: ' + e.message; }
+  }
+
+  // Download the game with progress (the line is drawn as the bytes arrive)
+  async function fetchWasm(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Could not download the game (${res.status})`);
+    const total = +res.headers.get('content-length') || 0, reader = res.body.getReader(), parts = [];
+    let got = 0;
+    for (;;) {
+      const { done, value } = await reader.read(); if (done) break;
+      parts.push(value); got += value.length;
+      setProgress(total ? got / total * 0.9 : Math.min(0.9, got / 2e6));
+    }
+    return new Response(new Blob(parts), { headers: { 'Content-Type': 'application/wasm' } });
+  }
+
+  (async () => {
+    const why = await hasWebGPU();
+    if (why) {
+      $('why').textContent = why;
+      if (LINUX) { $('linux-help').innerHTML = linuxHelp(); $('linux-help').classList.remove('hidden'); }
+      show('unsupported'); window.__lelelilo_game_ready(); return;
+    }
+    try {
+      addEventListener('lelelilo-error', e => fail(e.detail));
+      addEventListener('lelelilo-ready', () => {
+        setProgress(1); $('status').textContent = 'Ready';
+        // (under the studio intro nobody has seen this screen: it goes at once, so that the game is what the intro
+        // makes way for; seen, it is given a moment to show the line drawn to its end, and fades)
+        if (window.__lelelilo_held) $('loading').classList.add('gone', 'hidden'); else setTimeout(() => $('loading').classList.add('gone'), 200);
+        $('lelelilo').focus();
+        window.__lelelilo_game_ready();
+      }, { once: true });
+      window.__lelelilo_intro_done.then(() => $('lelelilo').focus());
+      const [{ default: init }, wasm] = await Promise.all([import(`./pkg/l2d.js?v=${BUILD}`), fetchWasm(`./pkg/l2d_bg.wasm?v=${BUILD}`)]);
+      $('status').textContent = 'Opening the flip book…';
+      await init({ module_or_path: wasm });
+    } catch (e) { fail(e); }
+  })();
+</script>
+</body>
+</html>
