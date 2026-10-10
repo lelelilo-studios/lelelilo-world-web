@@ -52,7 +52,7 @@
 <body>
 <!-- The Lelelilo-Studios intro, first, over the download: any press after it has had its moment skips it, and
      nothing pressed during it reaches the game -->
-<script src="lelelilo-intro/lelelilo-intro.js"></script>
+<script src="../../lelelilo-intro/lelelilo-intro.js"></script>
 <script>
   (function () {
     // Browsers start sound only after a tap or a key: the game's audio context (window.__lelelilo_audio) is
@@ -68,7 +68,7 @@
     window.__lelelilo_held = true;
     // Its sound follows the game's: off when the game is started silent (`?mute`)
     const sound = !/[?&]mute\b/.test(location.search);
-    window.__lelelilo_intro_done = LeleliloIntro.play({ base: 'lelelilo-intro/', until: gameReady, sound, onGesture: window.__lelelilo_unlock });
+    window.__lelelilo_intro_done = LeleliloIntro.play({ base: '../../lelelilo-intro/', until: gameReady, sound, onGesture: window.__lelelilo_unlock });
     window.__lelelilo_intro_done.then(() => { window.__lelelilo_held = false; });
   })();
 </script>
