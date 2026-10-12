@@ -4,13 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#f7f3e8">
-<meta name="description" content="Lelelilo, King of the Pillow Kingdom: lead a little army of cushions against the pencil case, drawn in pencil on squared paper.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lelelilo 2D">
+<meta name="description" content="Lelelilo 2D: a pillow against a night full of glowing monsters. Walk, gather crumbs, grow, and mix your skills until dawn.">
 <meta name="author" content="lelelilo.com">
-<title>Lelelilo: Pillow Kingdom</title>
+<title>Lelelilo 2D</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>
   :root { --paper: #f7f3e8; --graphite: #33333b; --faint: #6b6864; --red: #d8605a; --blue: #548fe0; }
-  html, body { margin: 0; height: 100%; background: var(--paper); color: var(--graphite); overflow: hidden; overscroll-behavior: none; }
+  html, body { margin: 0; height: 100%; background: var(--paper); color: var(--graphite); overflow: hidden; overscroll-behavior: none; touch-action: none; }
+  /* (measured by the page for the game, which draws its touch controls clear of a phone's notch and home bar) */
+  #insets { position: fixed; visibility: hidden; pointer-events: none; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
   body { font: 500 16px ui-rounded, 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
   canvas#lelelilo { position: fixed; inset: 0; width: 100vw; height: 100dvh; display: block; touch-action: none; outline: none; }
   .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; box-sizing: border-box;
@@ -67,11 +72,26 @@
     window.__lelelilo_intro_done.then(() => { window.__lelelilo_held = false; });
   })();
 </script>
-<canvas id="lelelilo" tabindex="0" aria-label="Lelelilo: Pillow Kingdom"></canvas>
+<canvas id="lelelilo" tabindex="0" aria-label="Lelelilo 2D"></canvas>
+<div id="insets"></div>
+<script>
+  (function () {
+    // On a touch screen the game draws its own stick and buttons on the canvas. It is told what the screen's
+    // notch, round corners and home bar take, and whether this browser can fill the screen (an iPhone's cannot).
+    const probe = document.getElementById('insets'), canvas = document.getElementById('lelelilo');
+    const measure = () => { const s = getComputedStyle(probe); window.__lelelilo_insets = [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft].map(v => parseFloat(v) || 0); };
+    measure();
+    for (const ev of ['resize', 'orientationchange']) addEventListener(ev, () => { measure(); setTimeout(measure, 300); });
+    window.__lelelilo_can_fullscreen = !!((document.fullscreenEnabled && canvas.requestFullscreen) || (document.webkitFullscreenEnabled && canvas.webkitRequestFullscreen));
+    // A thumb held down is playing: no menu, no magnifier, no pinch, no double-tap zoom
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+    for (const ev of ['gesturestart', 'gesturechange', 'dblclick']) document.addEventListener(ev, e => e.preventDefault());
+  })();
+</script>
 
 <div class="screen" id="loading" role="status" aria-live="polite">
   <img class="title" src="favicon.svg" alt="">
-  <h1>Lelelilo: Pillow Kingdom</h1>
+  <h1>Lelelilo 2D</h1>
   <svg class="rule" viewBox="0 0 300 34" aria-hidden="true">
     <line class="guide" x1="4" y1="26" x2="296" y2="26"/>
     <path class="drawn" id="drawn" d="M4,26 H296" style="clip-path: inset(-6px 100% -6px 0)"/>
@@ -108,7 +128,7 @@
 </div>
 
 <script type="module">
-  const BUILD = 'f500c306';
+  const BUILD = '5cb040a7';
   window.__lelelilo_build = BUILD;
   // Sound starts with the first tap or key, and stops while the page is hidden (another tab, a phone's home screen)
   const unlockAudio = window.__lelelilo_unlock;
