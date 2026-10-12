@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#f7f3e8">
-<meta name="description" content="Lelelilo 2D: a pillow in a pencil flip book. Run, jump, puff, glide, dash and flop across a paper pad.">
+<meta name="description" content="Lelelilo, King of the Pillow Kingdom: lead a little army of cushions against the pencil case, drawn in pencil on squared paper.">
 <meta name="author" content="lelelilo.com">
-<title>Lelelilo 2D</title>
+<title>Lelelilo: Pillow Kingdom</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>
   :root { --paper: #f7f3e8; --graphite: #33333b; --faint: #6b6864; --red: #d8605a; --blue: #548fe0; }
@@ -67,11 +67,11 @@
     window.__lelelilo_intro_done.then(() => { window.__lelelilo_held = false; });
   })();
 </script>
-<canvas id="lelelilo" tabindex="0" aria-label="Lelelilo 2D"></canvas>
+<canvas id="lelelilo" tabindex="0" aria-label="Lelelilo: Pillow Kingdom"></canvas>
 
 <div class="screen" id="loading" role="status" aria-live="polite">
   <img class="title" src="favicon.svg" alt="">
-  <h1>Lelelilo 2D</h1>
+  <h1>Lelelilo: Pillow Kingdom</h1>
   <svg class="rule" viewBox="0 0 300 34" aria-hidden="true">
     <line class="guide" x1="4" y1="26" x2="296" y2="26"/>
     <path class="drawn" id="drawn" d="M4,26 H296" style="clip-path: inset(-6px 100% -6px 0)"/>
@@ -108,7 +108,7 @@
 </div>
 
 <script type="module">
-  const BUILD = '273ab1ca';
+  const BUILD = 'f500c306';
   window.__lelelilo_build = BUILD;
   // Sound starts with the first tap or key, and stops while the page is hidden (another tab, a phone's home screen)
   const unlockAudio = window.__lelelilo_unlock;
