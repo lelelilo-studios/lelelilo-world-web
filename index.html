@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#f7f3e8">
-<meta name="description" content="Lelelilo 2D: a pillow in a pencil flip book. Run, jump, puff, glide, dash and flop across a paper pad.">
+<meta name="description" content="¡Batalla de nieve! Un juego de bolas de nieve en bloques, para niños: aprende jugando y luego gana a Robi, el robot.">
 <meta name="author" content="lelelilo.com">
-<title>Lelelilo 2D</title>
+<title>¡Batalla de nieve! · Lelelilo</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>
   :root { --paper: #f7f3e8; --graphite: #33333b; --faint: #6b6864; --red: #d8605a; --blue: #548fe0; }
@@ -30,7 +30,7 @@
   .rule .pencil { transition: transform .25s ease; }
   .status { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
   .browsers { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 30em; }
-  .browsers a { color: var(--graphite); text-decoration: none; padding: 12px 16px; border-radius: 4px; border: 1.5px solid var(--graphite); font-weight: 700; }
+  .browsers a, .browsers span { color: var(--graphite); text-decoration: none; padding: 12px 16px; border-radius: 4px; border: 1.5px solid var(--graphite); font-weight: 700; }
   .err { font: 500 13px ui-monospace, monospace; color: var(--red); white-space: pre-wrap; max-width: min(90vw, 900px); max-height: 40vh; overflow: auto; text-align: left; padding: 12px 14px; border: 1.5px dashed var(--red); user-select: text; -webkit-user-select: text; }
   .help { max-width: 32em; text-align: left; padding: 12px 16px; border: 1.5px dashed var(--faint); font-size: 14px; line-height: 1.5; }
   .help.hidden { display: none; }
@@ -67,11 +67,11 @@
     window.__lelelilo_intro_done.then(() => { window.__lelelilo_held = false; });
   })();
 </script>
-<canvas id="lelelilo" tabindex="0" aria-label="Lelelilo 2D"></canvas>
+<canvas id="lelelilo" tabindex="0" aria-label="¡Batalla de nieve!"></canvas>
 
 <div class="screen" id="loading" role="status" aria-live="polite">
   <img class="title" src="favicon.svg" alt="">
-  <h1>Lelelilo 2D</h1>
+  <h1>¡Batalla de nieve!</h1>
   <svg class="rule" viewBox="0 0 300 34" aria-hidden="true">
     <line class="guide" x1="4" y1="26" x2="296" y2="26"/>
     <path class="drawn" id="drawn" d="M4,26 H296" style="clip-path: inset(-6px 100% -6px 0)"/>
@@ -82,17 +82,17 @@
       <path d="M0,26 L2,22.2 L4.2,23.4 Z" fill="#33333b" stroke-width="1"/>
     </g>
   </svg>
-  <div class="status" id="status">Sharpening the pencil…</div>
+  <div class="status" id="status">Haciendo bolas de nieve…</div>
   <a class="studio" href="https://lelelilo.com/?ref=lelelilo-2d" target="_blank" rel="noopener">lelelilo<span>.com</span></a>
 </div>
 
 <div class="screen hidden" id="unsupported">
-  <h1>This browser can't open the flip book</h1>
-  <p>Lelelilo 2D needs <b>WebGPU</b>, which this browser doesn't offer yet. It works in these:</p>
+  <h1>Este navegador no puede abrir el juego</h1>
+  <p>El juego necesita <b>WebGPU</b>, y este navegador todavía no lo tiene. Funciona en estos:</p>
   <div class="browsers">
-    <a href="https://www.google.com/chrome/" rel="noopener">Chrome · desktop &amp; Android</a>
-    <a href="https://www.microsoft.com/edge" rel="noopener">Edge</a>
-    <a href="https://www.apple.com/safari/" rel="noopener">Safari 26+ · Mac, iPhone, iPad</a>
+    <span>Chrome · ordenador y Android</span>
+    <span>Edge</span>
+    <span>Safari 26+ · Mac, iPhone, iPad</span>
   </div>
   <div class="help hidden" id="linux-help"></div>
   <p id="why" style="font-size:13px"></p>
@@ -100,15 +100,15 @@
 </div>
 
 <div class="screen hidden" id="failed">
-  <h1>The pencil snapped</h1>
-  <p>Something went wrong while starting the game. Starting it again usually helps.</p>
-  <div class="browsers"><a href="." id="again">Try again</a></div>
+  <h1>¡Uy! Algo se rompió</h1>
+  <p>Algo salió mal al empezar el juego. Volver a abrirlo suele arreglarlo.</p>
+  <div class="browsers"><a href="." id="again">Probar otra vez</a></div>
   <div class="err" id="errtext"></div>
   <a class="studio" href="https://lelelilo.com/?ref=lelelilo-2d" target="_blank" rel="noopener">lelelilo<span>.com</span></a>
 </div>
 
 <script type="module">
-  const BUILD = '369225de';
+  const BUILD = '9b322fc0';
   window.__lelelilo_build = BUILD;
   // Sound starts with the first tap or key, and stops while the page is hidden (another tab, a phone's home screen)
   const unlockAudio = window.__lelelilo_unlock;
@@ -131,20 +131,20 @@
   $('again').addEventListener('click', e => { e.preventDefault(); location.reload(); });
   const LINUX = /Linux/.test(navigator.userAgent) && !/Android/.test(navigator.userAgent);
   // On Linux, browsers keep WebGPU switched off for now: say how to switch it on
-  const linuxHelp = () => `<b>On Linux</b>, WebGPU is still switched off by default. In Chrome, Chromium, Brave or Edge:
-    <ol><li>Open <code>chrome://flags</code> and set <b>Unsafe WebGPU Support</b> to Enabled,</li>
-    <li><b>Vulkan</b> to Enabled,</li><li><b>Preferred Ozone platform</b> to X11,</li><li>then relaunch the browser.</li></ol>`;
+  const linuxHelp = () => `<b>En Linux</b>, WebGPU viene apagado. En Chrome, Chromium, Brave o Edge:
+    <ol><li>abre <code>chrome://flags</code> y pon <b>Unsafe WebGPU Support</b> en Enabled,</li>
+    <li><b>Vulkan</b> en Enabled,</li><li><b>Preferred Ozone platform</b> en X11,</li><li>y vuelve a abrir el navegador.</li></ol>`;
 
   async function hasWebGPU() {
-    if (!navigator.gpu) return 'This browser has no WebGPU.';
-    try { const a = await navigator.gpu.requestAdapter(); return a ? null : 'WebGPU is present but found no usable graphics adapter.'; }
-    catch (e) { return 'WebGPU could not start: ' + e.message; }
+    if (!navigator.gpu) return 'Este navegador no tiene WebGPU.';
+    try { const a = await navigator.gpu.requestAdapter(); return a ? null : 'Hay WebGPU, pero no encontró una tarjeta gráfica que pueda usar.'; }
+    catch (e) { return 'WebGPU no pudo arrancar: ' + e.message; }
   }
 
   // Download the game with progress (the line is drawn as the bytes arrive)
   async function fetchWasm(url) {
     const res = await fetch(url);
-    if (!res.ok) throw new Error(`Could not download the game (${res.status})`);
+    if (!res.ok) throw new Error(`No se pudo descargar el juego (${res.status})`);
     const total = +res.headers.get('content-length') || 0, reader = res.body.getReader(), parts = [];
     let got = 0;
     for (;;) {
@@ -165,7 +165,7 @@
     try {
       addEventListener('lelelilo-error', e => fail(e.detail));
       addEventListener('lelelilo-ready', () => {
-        setProgress(1); $('status').textContent = 'Ready';
+        setProgress(1); $('status').textContent = '¡Listo!';
         // (under the studio intro nobody has seen this screen: it goes at once, so that the game is what the intro
         // makes way for; seen, it is given a moment to show the line drawn to its end, and fades)
         if (window.__lelelilo_held) $('loading').classList.add('gone', 'hidden'); else setTimeout(() => $('loading').classList.add('gone'), 200);
@@ -174,7 +174,7 @@
       }, { once: true });
       window.__lelelilo_intro_done.then(() => $('lelelilo').focus());
       const [{ default: init }, wasm] = await Promise.all([import(`./pkg/l2d.js?v=${BUILD}`), fetchWasm(`./pkg/l2d_bg.wasm?v=${BUILD}`)]);
-      $('status').textContent = 'Opening the flip book…';
+      $('status').textContent = 'Preparando la nieve…';
       await init({ module_or_path: wasm });
     } catch (e) { fail(e); }
   })();
